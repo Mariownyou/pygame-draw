@@ -19,56 +19,57 @@ WHITE = (255, 255, 255)
 # Setup a 300x300 pixel display with caption
 DISPLAYSURF = pygame.display.set_mode((w,h+100))
 DISPLAYSURF.fill(WHITE)
-pygame.display.set_caption("Example")
+pygame.display.set_caption("Paint Levushka")
 
 
 # Square class
+current_color = BLACK
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, color=WHITE):
+    def __init__(self, x, y, color=BLACK):
         super().__init__() 
-        w, h = 300, 50
+        w, h = 50, 50
         self.image = pygame.Surface((w, h))
-        self.image.fill(BLACK)
+        self.image.fill(color)
         self.rect = self.image.get_rect(center = (x, y))
         self.color = color
 
     def update(self):
-        print('button clicked')
+        global current_color
+        current_color = self.color
+        print('button clicked', current_color)
 
 
-class SpriteObject(pygame.sprite.Sprite):
+class Square(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__() 
         w, h = 10, 10
-        self.original_image = pygame.Surface((w, h))
-        self.original_image.fill(RED)
-        self.hover_image = pygame.Surface((w, h))
-        self.hover_color = GREEN
-        self.hover_image.fill(self.hover_color)
-        self.image = self.original_image
+        self.image = pygame.Surface((w, h))
         self.rect = self.image.get_rect(center = (x, y))
 
     def update(self, color):
-        self.hover_color = color
-        self.image = self.hover_image
-        print('color changed to', color)
+        self.image.fill(color)
+
+    def fill(self):
+        pass
 
  
 # Creating Lines and Shapes
 squares = pygame.sprite.Group()
-black_btn = Button(w//2, h)
+black_btn = Button(w//2, h+50, BLACK)
+red_btn = Button(w//3, h+50, RED)
 gui = pygame.sprite.Group(
-    black_btn
+    black_btn,
+    red_btn
 )
 x, y = 0, 5
 gap = 10
 for i in range(w // 10):
     for j in range(h // 10):
         x += gap
-        SpriteObject(x, y).add(squares)
+        new = Square(x, y)
+        new.add(squares)
     y += gap
     x = 0
-
 
 
 # Beginning Game Loop
@@ -87,7 +88,7 @@ while True:
             draw = False
     if draw:
         pos = pygame.mouse.get_pos()
-        [s.update(black_btn.color) for s in squares if s.rect.collidepoint(pos)]
+        [s.update(current_color) for s in squares if s.rect.collidepoint(pos)]
 
     DISPLAYSURF.fill(WHITE)
     gui.draw(DISPLAYSURF)
