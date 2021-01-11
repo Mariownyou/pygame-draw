@@ -25,26 +25,44 @@ pygame.display.set_caption("Paint Levushka")
 # Square class
 class Cursor:
     def __init__(self):
-        self.type = 'paint'
+        self.type = 'brush'
         self.color = BLACK
 cursor = Cursor()
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, color=BLACK, type='paint'):
+    def __init__(self, x, y, type='brush'):
         super().__init__() 
         w, h = 50, 50
         self.image = pygame.Surface((w, h))
-        self.image.fill(color)
+        self.image.fill(BLACK)
         self.rect = self.image.get_rect(center = (x, y))
-        self.color = color
         self.type = type
 
     def update(self):
-        cursor.color = self.color
         cursor.type = self.type
         print('button clicked')
 
+
+class Brush(Button):
+    def __init__(self, x, y, color):
+        super().__init__(x, y)
+        self.color = color
+
+    def update(self):
+        cursor.type = self.type
+        cursor.color = self.color
+        print('brush selceted')
+
+class Fill(Button):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.activated = False
+        self.type = 'fill'
+    
+    def update(self):
+        self.activated = False if self.activated else True
+        print('fill activated')
 
 class Square(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -76,9 +94,9 @@ class Square(pygame.sprite.Sprite):
  
 # Creating Lines and Shapes
 squares = pygame.sprite.Group()
-black_btn = Button(w//2, h+50, BLACK)
-red_btn = Button(w//3, h+50, RED)
-fill_btn = Button(w//4, h+50, GREEN, 'fill')
+black_btn = Brush(w//2, h+50, BLACK)
+red_btn = Brush(w//3, h+50, RED)
+fill_btn = Fill(w//4, h+50)
 gui = pygame.sprite.Group(
     black_btn,
     red_btn,
@@ -107,8 +125,9 @@ while True:
             pos = pygame.mouse.get_pos()
             [s.update() for s in gui if s.rect.collidepoint(pos)]
             draw = True
-            if cursor.type == 'fill':
+            if fill_btn.activated:
                 [s.fill(pos) for s in squares if s.rect.collidepoint(pos)]
+            
                 
         if event.type == pygame.MOUSEBUTTONUP:
             draw = False
