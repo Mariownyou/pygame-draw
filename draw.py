@@ -23,20 +23,27 @@ pygame.display.set_caption("Paint Levushka")
 
 
 # Square class
-current_color = BLACK
+class Cursor:
+    def __init__(self):
+        self.type = 'paint'
+        self.color = BLACK
+cursor = Cursor()
+
+
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, color=BLACK):
+    def __init__(self, x, y, color=BLACK, type='paint'):
         super().__init__() 
         w, h = 50, 50
         self.image = pygame.Surface((w, h))
         self.image.fill(color)
         self.rect = self.image.get_rect(center = (x, y))
         self.color = color
+        self.type = type
 
     def update(self):
-        global current_color
-        current_color = self.color
-        print('button clicked', current_color)
+        cursor.color = self.color
+        cursor.type = self.type
+        print('button clicked')
 
 
 class Square(pygame.sprite.Sprite):
@@ -45,21 +52,37 @@ class Square(pygame.sprite.Sprite):
         w, h = 10, 10
         self.image = pygame.Surface((w, h))
         self.rect = self.image.get_rect(center = (x, y))
+        self.empty = True
 
     def update(self, color):
+        self.empty = False
         self.image.fill(color)
 
-    def fill(self):
-        pass
+    def fill(self, pos):
+        if self.empty:
+            self.image.fill(cursor.color)
+            self.empty = False
+            pos = list(pos)
+            pos_1 = (pos[0] + 10, pos[1])
+            pos_2 = (pos[0] - 10, pos[1])
+            pos_3 = (pos[0], pos[1] - 10)
+            pos_4 = (pos[0], pos[1] + 10)
+            [s.fill(pos_1) for s in squares if s.rect.collidepoint(pos_1)]
+            [s.fill(pos_2) for s in squares if s.rect.collidepoint(pos_2)]
+            [s.fill(pos_3) for s in squares if s.rect.collidepoint(pos_3)]
+            [s.fill(pos_4) for s in squares if s.rect.collidepoint(pos_4)]
+            print('fill', pos)
 
  
 # Creating Lines and Shapes
 squares = pygame.sprite.Group()
 black_btn = Button(w//2, h+50, BLACK)
 red_btn = Button(w//3, h+50, RED)
+fill_btn = Button(w//4, h+50, GREEN, 'fill')
 gui = pygame.sprite.Group(
     black_btn,
-    red_btn
+    red_btn,
+    fill_btn
 )
 x, y = 0, 5
 gap = 10
@@ -84,11 +107,14 @@ while True:
             pos = pygame.mouse.get_pos()
             [s.update() for s in gui if s.rect.collidepoint(pos)]
             draw = True
+            if cursor.type == 'fill':
+                [s.fill(pos) for s in squares if s.rect.collidepoint(pos)]
+                
         if event.type == pygame.MOUSEBUTTONUP:
             draw = False
     if draw:
         pos = pygame.mouse.get_pos()
-        [s.update(current_color) for s in squares if s.rect.collidepoint(pos)]
+        [s.update(cursor.color) for s in squares if s.rect.collidepoint(pos)]
 
     DISPLAYSURF.fill(WHITE)
     gui.draw(DISPLAYSURF)
